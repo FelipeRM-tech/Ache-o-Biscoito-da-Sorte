@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Onde está o Biscoito da Sorte? 🥠</title>
+<style>
+:root{--bg:#fbf3e4;--ink:#2b1d1a;--red:#c8312b;--card:#fffaf0;--line:#e3cfa8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d1614;--ink:#f6ead6;--card:#2a201d;--line:#4a3a30}}
+:root[data-theme="dark"]{--bg:#1d1614;--ink:#f6ead6;--card:#2a201d;--line:#4a3a30}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:"Noto Serif JP",Georgia,"Hiragino Mincho ProN",serif;padding:12px}
+header{max-width:1100px;margin:0 auto 10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-size:clamp(1.1rem,3.5vw,1.6rem);margin:0}
+h1 small{display:block;font-size:.7em;font-weight:400;opacity:.75}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-family:system-ui,sans-serif;font-size:.9rem}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:99px;padding:6px 12px}
+button{font:inherit;font-family:system-ui,sans-serif;font-size:.9rem;background:var(--red);color:#fff;border:0;border-radius:99px;padding:7px 14px;cursor:pointer}
+button.alt{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+#wrap{max-width:1100px;margin:0 auto;border:3px solid var(--red);border-radius:12px;overflow:hidden;background:#f7e3b5;touch-action:manipulation}
+svg{display:block;width:100%;height:auto}
+.it{cursor:pointer;user-select:none}
+#hint{pointer-events:none}
+#modal{position:fixed;inset:0;background:rgba(20,10,8,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:9}
+#modal.on{display:flex}
+.card{background:var(--card);color:var(--ink);border:3px solid var(--red);border-radius:16px;max-width:420px;width:100%;padding:26px 22px;text-align:center;animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pop{from{transform:scale(.2) rotate(-15deg);opacity:0}to{transform:none;opacity:1}}
+.ck{font-size:72px;display:inline-block;animation:crack 1s ease .3s both}
+@keyframes crack{0%{transform:rotate(0)}30%{transform:rotate(-14deg) scale(1.2)}60%{transform:rotate(12deg) scale(1.2)}100%{transform:rotate(0) scale(1)}}
+.paper{background:#fff;color:#2b1d1a;border:1px dashed var(--red);margin:14px 0;padding:16px;font-size:1.15rem;line-height:1.5;font-style:italic;animation:slip .7s ease 1s both}
+@keyframes slip{from{opacity:0;transform:translateY(-14px) scaleY(.2)}to{opacity:1;transform:none}}
+.jp{color:var(--red);font-size:1.4rem;letter-spacing:.3em}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Onde está o Biscoito da Sorte? 🥠<small>探せ！幸運のクッキー — encontre-o escondido no Japão</small></h1>
+  <div class="bar">
+    <span class="pill">⏱ <b id="t">0</b>s</span>
+    <span class="pill">Rodadas: <b id="r">0</b></span>
+    <button class="alt" id="hb">💡 Dica</button>
+    <button id="nb">Novo cenário</button>
+  </div>
+</header>
+<div id="wrap"><svg id="s" viewBox="0 0 1200 760" role="img" aria-label="Cenário japonês cheio de detalhes onde há um biscoito da sorte escondido"></svg></div>
+
+<div id="modal"><div class="card">
+  <div class="jp">福</div>
+  <div class="ck">🥠</div>
+  <div class="paper" id="ph"></div>
+  <div style="font-family:system-ui;font-size:.85rem;opacity:.8;margin-bottom:12px">Você achou em <b id="ft"></b>s!</div>
+  <button id="again">Jogar de novo</button>
+</div></div>
+
+<script>
+const PHRASES=["Caia sete vezes, levante-se oito.","Até a jornada mais longa começa com um único passo.","Não confunda velocidade com progresso.","O bambu se curva ao vento, mas não abandona suas raízes.","Até a noite mais longa cede lugar à manhã.","Depois da chuva, a terra fica mais firme.","A flor de cerejeira é bela porque floresce com coragem, mesmo sabendo que é breve.","Pequenos esforços diários constroem grandes montanhas."];
+const svg=document.getElementById('s'),NS='http://www.w3.org/2000/svg';
+const $=id=>document.getElementById(id);
+let cookie,start,timer,rounds=0,done=false,last=-1;
+const rnd=(a,b)=>a+Math.random()*(b-a);
+function el(tag,attrs,parent=svg){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent.appendChild(e);return e}
+
+function background(){
+  svg.innerHTML='';
+  const d=el('defs',{});
+  const g=el('linearGradient',{id:'sky',x1:0,y1:0,x2:0,y2:1},d);
+  el('stop',{offset:0,'stop-color':'#ffd6c0'},g);el('stop',{offset:1,'stop-color':'#fff1d0'},g);
+  el('rect',{width:1200,height:760,fill:'url(#sky)'});
+  el('circle',{cx:930,cy:120,r:70,fill:'#e0392d',opacity:.85});
+  el('path',{d:'M180 420 L420 160 Q450 130 480 160 L720 420 Z',fill:'#6b86a8'});
+  el('path',{d:'M395 190 L450 135 L505 190 Q450 170 395 190Z',fill:'#fff'});
+  el('path',{d:'M0 420 Q200 360 400 420 T800 420 T1200 400 V470 H0Z',fill:'#9ab58a'});
+  el('rect',{y:470,width:1200,height:290,fill:'#e9cf9a'});
+  el('path',{d:'M0 560 Q300 520 600 570 T1200 540 V640 Q900 680 600 640 T0 650Z',fill:'#7fb3cf',opacity:.8});
+  for(let i=0;i<8;i++)el('path',{d:`M${rnd(0,1100)} ${rnd(570,640)} q20 -10 40 0 q20 10 40 0`,fill:'none',stroke:'#fff',opacity:.6,'stroke-width':2});
+  el('path',{d:'M0 700 H1200',stroke:'#c9a96a','stroke-width':2});
+}
+
+const ITEMS=['⛩️','🏯','🌸','🎎','🏮','🐟','🍣','🍙','🥢','🎏','🎋','🦊','🐱','🍡','🎐','🪭','🍥','🍜','🍵','🎌','🗻','🐉','🎴','🥷','👘','🐼','🦀','🍱','🪷','🎍','🐸','🚃','🎑','🧧','🐙'];
+const DECOY=['🥟','🥮','🍘','🌙','🍪','🥠'];
+function scene(){
+  background();
+  const layer=el('g',{});
+  const list=[];
+  for(let i=0;i<120;i++)list.push({e:ITEMS[Math.floor(Math.random()*ITEMS.length)],s:rnd(34,62)});
+  for(let i=0;i<22;i++)list.push({e:DECOY[Math.floor(Math.random()*(DECOY.length-1))],s:rnd(24,32)});
+  const pos=[];
+  list.forEach(o=>{o.x=rnd(30,1170);o.y=rnd(70,730);o.r=rnd(-25,25)});
+  // sort by y so lower items overlap upper (depth)
+  list.sort((a,b)=>a.y-b.y);
+  const idx=Math.floor(rnd(list.length*.15,list.length*.95));
+  list.splice(idx,0,{e:'🥠',s:rnd(24,28),x:rnd(60,1140),y:rnd(110,720),r:rnd(-60,60),win:true});
+  list.forEach(o=>{
+    const t=el('text',{x:o.x,y:o.y,'font-size':o.s,'text-anchor':'middle',class:'it',transform:`rotate(${o.r} ${o.x} ${o.y})`},layer);
+    t.textContent=o.e;
+    if(o.win){cookie={x:o.x,y:o.y};t.addEventListener('click',win)}
+    else t.addEventListener('click',()=>miss(o.x,o.y));
+  });
+  // sakura petals on top (non-clickable)
+  for(let i=0;i<30;i++){const p=el('text',{x:rnd(0,1200),y:rnd(0,760),'font-size':rnd(10,16),opacity:.5,'pointer-events':'none'});p.textContent='🌸'}
+}
+function miss(x,y){
+  const c=el('circle',{cx:x,cy:y-12,r:6,fill:'none',stroke:'#c8312b','stroke-width':3,'pointer-events':'none'});
+  c.animate([{r:6,opacity:1},{r:34,opacity:0}],{duration:500}).onfinish=()=>c.remove();
+}
+function win(){
+  if(done)return;done=true;clearInterval(timer);
+  const s=Math.round((Date.now()-start)/1000);
+  $('ft').textContent=s;
+  let n;do{n=Math.floor(Math.random()*PHRASES.length)}while(n===last);last=n;
+  $('ph').textContent='“'+PHRASES[n]+'”';
+  const m=$('modal');m.classList.remove('on');void m.offsetWidth;m.classList.add('on');
+}
+let revealT;
+function timeUp(){
+  if(done)return;done=true;clearInterval(timer);$('t').textContent=180;
+  const old=$('hint');if(old)old.remove();
+  const c=el('circle',{cx:cookie.x,cy:cookie.y-9,r:40,fill:'rgba(255,215,0,.35)',stroke:'#c8312b','stroke-width':5,'pointer-events':'none'});
+  c.animate([{r:140,opacity:0},{r:40,opacity:1}],{duration:900,fill:'forwards'});
+  c.animate([{'stroke-width':5},{'stroke-width':10},{'stroke-width':5}],{duration:900,iterations:5});
+  const b=el('rect',{x:300,y:14,width:600,height:46,rx:23,fill:'#c8312b','pointer-events':'none'});
+  const tx=el('text',{x:600,y:44,'text-anchor':'middle','font-size':22,fill:'#fff','font-family':'system-ui,sans-serif','pointer-events':'none'});
+  tx.textContent='⏰ Tempo esgotado! O biscoito estava aqui. Nova rodada em 5s…';
+  revealT=setTimeout(newGame,5000);
+}
+function hint(){
+  if(done||!cookie)return;
+  const old=$('hint');if(old)old.remove();
+  const c=el('circle',{id:'hint',cx:cookie.x+rnd(-90,90),cy:cookie.y+rnd(-90,90),r:170,fill:'none',stroke:'#c8312b','stroke-width':4,'stroke-dasharray':'12 8'});
+  c.animate([{opacity:1},{opacity:0}],{duration:2500}).onfinish=()=>c.remove();
+}
+function newGame(){
+  clearTimeout(revealT);
+  done=false;$('modal').classList.remove('on');
+  scene();start=Date.now();$('t').textContent=0;clearInterval(timer);
+  timer=setInterval(()=>{const s=Math.round((Date.now()-start)/1000);$('t').textContent=s;if(s>=180)timeUp()},500);
+  rounds++;$('r').textContent=rounds;
+}
+$('nb').onclick=newGame;$('again').onclick=newGame;$('hb').onclick=hint;
+$('modal').addEventListener('click',e=>{if(e.target.id==='modal'){}});
+newGame();
+</script>
+</body>
+</html>
